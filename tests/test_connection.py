@@ -377,7 +377,7 @@ class TestErrorHandling:
     async def test_server_lacks_tools_capability_raises(self):
         mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks(has_tools=False)
 
-        mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
+        mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio, "mcp.client.streamable_http": mock_shttp, "mcp.types": mock_types}
         with patch.dict(sys.modules, mod_map):
             manager = SkillMcpManager()
             config = _stdlib_config()
@@ -399,7 +399,7 @@ class TestErrorHandling:
             side_effect=RuntimeError("Subprocess failed"),
         )
 
-        mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
+        mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio, "mcp.client.streamable_http": MagicMock(), "mcp.types": MagicMock()}
         with patch.dict(sys.modules, mod_map):
             manager = SkillMcpManager()
             config = _stdlib_config()
