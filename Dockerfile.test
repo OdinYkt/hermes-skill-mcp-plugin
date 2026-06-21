@@ -23,7 +23,7 @@ WORKDIR /opt/hermes
 RUN pip install --no-cache-dir "hermes-agent[all,messaging]"
 
 # Install test dependencies
-RUN pip install --no-cache-dir pytest pytest-asyncio pyyaml
+RUN pip install --no-cache-dir pytest pytest-asyncio pyyaml flake8 wemake-python-styleguide
 
 # Hermes config directories
 RUN mkdir -p /opt/data/skills /opt/data/logs /root/.hermes

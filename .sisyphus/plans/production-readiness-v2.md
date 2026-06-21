@@ -1,7 +1,7 @@
 # Hermes-Skill-MCP Production Readiness Plan v2
 
 **State**: 144/150 tests, 5 fail. BDD: 41 IMPLEMENTED, 11 PARTIAL, 14 MISSING.
-**Goal**: Production-ready — 155+ tests, 0 failures, README, wemake clean.
+**Goal**: Production-ready — 135 tests, 0 failures, README, wemake clean.
 
 ## Root Causes of 5 Failing Tests
 
