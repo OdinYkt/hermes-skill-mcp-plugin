@@ -251,8 +251,6 @@ async def _handle_skill_mcp(
         return outcome[_JKEY_ERROR]
 
     return _format_response(outcome[_JKEY_DATA], call_args.get(_KEY_GREP))
-    if not outcome[_JKEY_OK]:
-        return outcome[_JKEY_ERROR]
 
     return _format_response(outcome[_JKEY_DATA], call_args.get(_KEY_GREP))
 

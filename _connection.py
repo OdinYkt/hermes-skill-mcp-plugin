@@ -236,6 +236,7 @@ async def _establish_connection(
         return session
     except Exception:
         manager._clients.pop(conn_key, None)
+        await _close_connection_safely(conn)
         raise
 
 
@@ -332,6 +333,7 @@ async def _execute_tool_call(
         ) from None
     except Exception:
         manager._clients.pop(conn_key, None)
+        await _close_connection_safely(conn)
         raise
 
 
@@ -349,6 +351,7 @@ async def _execute_resource_read(
         )
     except Exception:
         manager._clients.pop(conn_key, None)
+        await _close_connection_safely(conn)
         raise
 
 
@@ -369,6 +372,7 @@ async def _execute_prompt_get(
         )
     except Exception:
         manager._clients.pop(conn_key, None)
+        await _close_connection_safely(conn)
         raise
 
 
@@ -424,7 +428,7 @@ async def call_prompt(
 class SkillMcpManager:
     """Manages MCP client connections per session/skill/mcp.
 
-    Connections are keyed by ``{session_id}::{skill_name}::{mcp_name}``.
+    Connections are keyed by ``{session_id}:{skill_name}:{mcp_name}``.
     Each connection is held open so that both the transport and the
     ClientSession stay alive across multiple tool calls.
 
@@ -591,7 +595,7 @@ class SkillMcpManager:
         If ``session_id`` is empty string, closes all connections.
         """
         if session_id:
-            prefix = f"{session_id}::"
+            prefix = "{}:".format(session_id)
             keys = [
                 key for key in self._clients
                 if key.startswith(prefix)

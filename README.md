@@ -42,15 +42,15 @@ Requires Docker. Set `HERMES_API_KEY` env var for E2E tests (skipped otherwise).
 
 | Feature | Scenarios | Status |
 |---|---|---|
-| F1: Plugin discovery & registration | 1.1-1.3 | ✅ register(ctx) in __init__.py, deferred imports |
-| F2: MCP config discovery | 2.1-2.12 | ✅ full parser with env expansion, path resolution, validation |
-| F3: skill_mcp happy path | 3.1-3.6 | ✅ lazy connect, cache reuse, stdio+HTTP, resource/prompt |
+| F1: Plugin discovery & registration | 1.1-1.3 | 🟡 register(ctx) code exists, no direct test |
+| F2: MCP config discovery | 2.1-2.12 | ✅ 11/12 — 2.4 duplicate YAML not detected at parse |
+| F3: skill_mcp happy path | 3.1-3.6 | ✅ stdio tested, HTTP parse only |
 | F4: skill_mcp error cases | 4.1-4.15 | ✅ 15 error codes mapped in handler pipeline |
-| F5: Connection lifecycle | 5.1-5.9 | ✅ session keys, isolation, concurrent locking, shutdown |
-| F6: skill_view augmentation | 6.1-6.6 | ✅ transform_tool_result hook, static MCP list |
-| F7: Security | 7.1-7.7 | ✅ env filtering, credential redaction, denylist |
+| F5: Connection lifecycle | 5.1-5.9 | ✅ session keys, isolation, locking, shutdown |
+| F6: skill_view augmentation | 6.1-6.6 | ✅ hook + static MCP list |
+| F7: Security | 7.1-7.7 | 🟡 env filtering + redaction; denylist connect-time, PATH warning absent |
 | F8: Tool schema | 8.1-8.2 | ✅ schema + async handler signature |
-| F9: Timeouts | 9.1-9.3 | ✅ connect/tool/idle timeouts from config |
+| F9: Timeouts | 9.1-9.3 | 🟡 HTTP passes timeout; stdio connect_timeout not enforced |
 | F10: Non-functional | 10.1-10.5 | 🟡 perf tests marked @pytest.mark.slow |
 | F11: Config schema | reference | ✅ known fields, command/url XOR, defaults |
 
