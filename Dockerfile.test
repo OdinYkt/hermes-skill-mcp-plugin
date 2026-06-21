@@ -22,16 +22,15 @@ WORKDIR /opt/hermes
 RUN pip install --no-cache-dir "hermes-agent[all,messaging]"
 
 # Install test dependencies
-RUN pip install --no-cache-dir pytest pytest-asyncio
+RUN pip install --no-cache-dir pytest pytest-asyncio pyyaml
 
 # Hermes config directories
-RUN mkdir -p /opt/data/skills
-RUN mkdir -p /root/.hermes
+RUN mkdir -p /opt/data/skills /opt/data/logs /root/.hermes
 
 # Copy plugin source into Hermes plugin dir
 RUN mkdir -p /opt/hermes/plugins/skill-mcp
-COPY __init__.py _metadata.py _config.py _connection.py _skill_view_hook.py \
-    /opt/hermes/plugins/skill-mcp/
+COPY *.py /opt/hermes/plugins/skill-mcp/
+COPY plugin.yaml /opt/hermes/plugins/skill-mcp/
 
 # Copy test fixtures
 COPY fixtures/magic_server.py /opt/data/magic_server.py

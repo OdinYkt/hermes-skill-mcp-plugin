@@ -47,3 +47,38 @@ def e2e_config():
         "url": os.environ.get("HERMES_API_URL", ""),
         "model": os.environ.get("HERMES_API_MODEL", ""),
     }
+
+
+@pytest.fixture
+def temp_skills_dir(tmp_path):
+    """Temporary skills directory."""
+    skills_dir = tmp_path / "skills"
+    skills_dir.mkdir()
+    return skills_dir
+
+
+@pytest.fixture
+def skill_with_mcp(tmp_path):
+    """Fixture factory: create temp skill dir with mcp.yaml."""
+    import yaml
+
+    def _create(skill_name, mcp_config):
+        skill_dir = tmp_path / skill_name
+        skill_dir.mkdir(exist_ok=True)
+        mcp_yaml = skill_dir / "mcp.yaml"
+        mcp_yaml.write_text(yaml.dump(mcp_config))
+        return skill_dir
+
+    return _create
+
+
+@pytest.fixture
+def skill_without_mcp(tmp_path):
+    """Fixture factory: create temp skill dir without mcp.yaml."""
+
+    def _create(skill_name):
+        skill_dir = tmp_path / skill_name
+        skill_dir.mkdir(exist_ok=True)
+        return skill_dir
+
+    return _create

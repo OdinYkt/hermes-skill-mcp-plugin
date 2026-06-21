@@ -5,15 +5,14 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
-from _security import (
-    DENIED_COMMANDS,
-    SAFE_BASELINE_VARS,
-    filter_mcp_environment,
-    is_command_allowed,
-    redact_credentials,
-)
+from conftest import import_plugin_module
 
-
+_mod = import_plugin_module("_security")
+DENIED_COMMANDS = _mod.DENIED_COMMANDS
+SAFE_BASELINE_VARS = _mod.SAFE_BASELINE_VARS
+filter_mcp_environment = _mod.filter_mcp_environment
+is_command_allowed = _mod.is_command_allowed
+redact_credentials = _mod.redact_credentials
 PATH_KEY = "PATH"
 HOME_KEY = "HOME"
 USER_KEY = "USER"
@@ -39,7 +38,7 @@ class TestSafeBaselineVars:
             assert key in SAFE_BASELINE_VARS
 
     def test_is_set_type(self):
-        assert isinstance(SAFE_BASELINE_VARS, set)
+        assert isinstance(SAFE_BASELINE_VARS, frozenset)
 
 
 class TestDeniedCommands:
@@ -50,7 +49,7 @@ class TestDeniedCommands:
         assert "su" in DENIED_COMMANDS
 
     def test_is_set_type(self):
-        assert isinstance(DENIED_COMMANDS, set)
+        assert isinstance(DENIED_COMMANDS, frozenset)
 
 
 class TestFilterMcpEnvironment:

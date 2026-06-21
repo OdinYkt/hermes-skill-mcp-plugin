@@ -22,15 +22,29 @@ MODEL_KEY = "model"
 
 def make_manager():
     """Create a fresh SkillMcpManager instance."""
+    import sys
     from importlib import util as iutil
 
     plugin_dir = Path(PLUGIN_PATH)
-    spec = iutil.spec_from_file_location(
+    plugin_dir_str = str(plugin_dir)
+    if plugin_dir_str not in sys.path:
+        sys.path.insert(0, plugin_dir_str)
+
+    # Pre-load _security so lazy imports in _connection.py work
+    sec_spec = iutil.spec_from_file_location(
+        "_security", plugin_dir / "_security.py",
+    )
+    sec_mod = iutil.module_from_spec(sec_spec)
+    sys.modules["_security"] = sec_mod
+    sec_spec.loader.exec_module(sec_mod)
+
+    conn_spec = iutil.spec_from_file_location(
         "_connection", plugin_dir / "_connection.py",
     )
-    mod = iutil.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.SkillMcpManager()
+    conn_mod = iutil.module_from_spec(conn_spec)
+    sys.modules["_connection"] = conn_mod
+    conn_spec.loader.exec_module(conn_mod)
+    return conn_mod.SkillMcpManager()
 
 
 @asynccontextmanager

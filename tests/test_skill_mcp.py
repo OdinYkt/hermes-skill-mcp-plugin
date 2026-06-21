@@ -100,11 +100,12 @@ class TestMcpConnection:
             SKILL_NAME, SERVER_NAME, server_config,
         ):
             manager = make_manager()
-            tools = await manager.connect(
+            session = await manager.connect(
                 manager.get_or_create_client(
                     SKILL_NAME, SERVER_NAME, server_config,
                 ),
-            ).list_tools()
+            )
+            tools = await session.list_tools()
         tool_names = {entry.name for entry in tools.tools}
         assert TOOL_NAME in tool_names
 
