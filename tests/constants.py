@@ -58,12 +58,13 @@ async def connected_manager(skill_name, server_name, server_config):
         await manager.close()
 
 
-async def _connect(manager, skill_name, server_name, server_config) -> None:
+async def _connect(  # noqa: WPS210
+        manager, skill_name, server_name, server_config,
+    ) -> None:
     """Connect manager to MCP server."""
-    conn = await manager.get_or_create_client(
+    await manager.get_or_create_client(
         skill_name, server_name, server_config,
     )
-    await manager.connect(conn)
 
 
 def run_hermes_e2e(args: list, cfg: dict) -> str:
