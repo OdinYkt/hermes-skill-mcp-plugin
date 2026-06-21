@@ -4,11 +4,22 @@ Dynamic MCP server loading from Hermes skills. Skills carry MCP servers via
 `mcp.yaml` sidecar. Agent calls `skill_mcp(skill_name, mcp_name, tool_name, arguments)`.
 No `config.yaml` editing. No restart. One tool in schema.
 
-## Quick Install
+## Installation
 
 ```bash
-git clone <repo> ~/.hermes/plugins/skill-mcp/
-pip install -e ~/.hermes/plugins/skill-mcp/
+pip install hermes-skill-mcp-plugin
+hermes-skill-mcp install
+```
+
+This installs the package and registers the plugin at
+`~/.hermes/plugins/skill-mcp/`.
+
+Or from source:
+
+```bash
+git clone https://github.com/aqa-vibes/hermes-skill-mcp-plugin
+cd hermes-skill-mcp-plugin && pip install -e .
+hermes-skill-mcp install
 ```
 
 ## Usage
@@ -57,12 +68,14 @@ Requires Docker. Set `HERMES_API_KEY` env var for E2E tests (skipped otherwise).
 ## Architecture
 
 ```
-__init__.py          — plugin entrypoint: register(ctx) → tools + hooks
-_config.py           — mcp.yaml parser: validate, normalize, expand env
-_security.py         — env filtering, credential redaction, command denylist
-_connection.py       — MCP connection manager: lazy connect, cache, lifecycle
-_tool_handler.py     — async handler: validate args, resolve skill, execute
-_skill_view_hook.py  — transform_tool_result hook: static MCP list in skill_view
+src/hermes_skill_mcp/
+├── __init__.py          — plugin entrypoint: register(ctx)
+├── _config.py           — mcp.yaml parser
+├── _security.py         — env filtering, credential redaction
+├── _connection.py       — MCP connection manager
+├── _tool_handler.py     — async handler pipeline
+├── _skill_view_hook.py  — transform_tool_result hook
+└── plugin.yaml          — Hermes manifest
 ```
 
 ## License
