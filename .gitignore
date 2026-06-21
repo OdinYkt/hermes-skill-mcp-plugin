@@ -23,4 +23,4 @@ Thumbs.db
 
 # Secrets
 .env
-*.env.local
+*.env.local.sisyphus/
