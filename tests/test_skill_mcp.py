@@ -66,7 +66,7 @@ class TestMcpConfigParsing:
         parse_config = import_plugin_module("_config").parse_mcp_config
         empty_dir = tmp_path / "no-mcp-skill"
         empty_dir.mkdir()
-        assert parse_config(empty_dir) is None
+        assert parse_config(empty_dir) == {}
 
 
 class TestSkillViewHook:
