@@ -47,31 +47,32 @@ description is ~80 tokens.
 
 ## What's tested
 
-135 tests pass in Docker, 0 failures. `./scripts/run-tests.sh` if you
+155 passed, 1 skipped in Docker, 0 failures. `./scripts/run-tests.sh` if you
 want to verify locally.
 
 | Area | Coverage |
 |---|---|
-| Config parsing (12 scenarios) | ✅ env expansion, path resolution, defaults, validation |
-| Security (7 scenarios) | ✅ env filtering, credential redaction, denylist |
-| Connection lifecycle (9 scenarios) | ✅ lazy connect, session keys, concurrent locking, shutdown |
+| Plugin registration (3 scenarios) | ✅ tool + hook registration, SDK check |
+| Config parsing (14 scenarios) | ✅ env expansion, path resolution, defaults, duplicate detection |
+| Security (10 scenarios) | ✅ env filtering, credential redaction, denylist, PATH append-only |
+| Connection lifecycle (12 scenarios) | ✅ lazy connect, session keys, concurrent locking, idle cleanup, shutdown |
 | Error handling (15 scenarios) | ✅ all BDD error codes mapped |
 | skill_view augmentation (6 scenarios) | ✅ static MCP list in skill display |
-| Timeouts | 🟡 HTTP passes timeout; stdio connect_timeout not enforced |
-| HTTP transport | 🟡 config parsing tested; runtime HTTP not covered |
-| Duplicate YAML keys | ❌ YAML lib silently overwrites; no detection |
+| Timeouts (7 scenarios) | 🟡 defaults + config parsing tested; stdio connect_timeout not enforced |
+| HTTP transport (2 scenarios) | 🟡 config routing tested; runtime HTTP flow not covered |
+| Performance (3/5 scenarios) | ✅ parse latency <50ms, cached overhead <50ms |
+| Duplicate YAML keys (2 scenarios) | ✅ warning logged, cross-skill isolation |
 
+**Not yet covered:** BDD 10.2 (first-call latency bound), 10.4 (no memory leak over N cycles),
+10.5 (platform support). These need real MCP server infrastructure for integration testing.
 ## Known limitations
 
-- **Duplicate YAML keys**: PyYAML overwrites silently. If `mcp.yaml`
-  defines the same server name twice, the second entry wins. BDD 2.4
-  wants a warning — not implemented.
 - **stdio connect_timeout**: only HTTP transport respects it. stdio
   connections don't have a timeout wrapper.
 - **No auto-update**: `git pull` in the plugin directory. Hermes has no
   plugin manager.
-- **No perf benchmarks**: parse latency and cached overhead are not
-  measured yet.
+- **HTTP runtime**: config parsing tested; full HTTP connection flow needs
+  integration test.
 
 ## Files
 

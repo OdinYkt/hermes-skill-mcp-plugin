@@ -1,6 +1,6 @@
 [project]
 name = "hermes-skill-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "Hermes Agent plugin — dynamic MCP server loading from skills"
 requires-python = ">=3.11"
 dependencies = [
@@ -46,6 +46,7 @@ extend-exclude = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = ["slow: performance tests"]
 
 
 [tool.setuptools.packages.find]
