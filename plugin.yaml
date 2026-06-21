@@ -1,0 +1,9 @@
+name: skill-mcp
+version: 0.1.0
+description: "Dynamic MCP server loading from skills. Skills carry their own MCP servers via mcp.yaml sidecar."
+kind: standalone
+author: Hermes Agent
+license: MIT
+homepage: https://github.com/user/hermes-skill-mcp
+platforms: [linux, macos, windows]
+python: ">=3.11"

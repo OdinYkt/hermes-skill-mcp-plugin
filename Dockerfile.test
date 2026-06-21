@@ -1,0 +1,29 @@
+FROM python:3.12-slim
+
+# Hermes Agent dependencies (minimal set)
+RUN pip install --no-cache-dir \
+    hermes-agent \
+    mcp \
+    pyyaml \
+    pytest
+
+# Install MCP servers for testing
+RUN pip install --no-cache-dir \
+    mcp-server-time \
+    mcp-server-sqlite
+
+# Create Hermes directory structure
+RUN mkdir -p /root/.hermes/{skills,memories,logs,sessions}
+COPY hermes-config.yaml /root/.hermes/config.yaml
+
+# Install the plugin
+COPY . /root/.hermes/plugins/skill-mcp/
+
+# Create test skill with mcp.yaml
+COPY test-skill/ /root/.hermes/skills/time-skill/
+
+# Create the test runner
+COPY test_runner.sh /
+RUN chmod +x /test_runner.sh
+
+ENTRYPOINT ["/test_runner.sh"]

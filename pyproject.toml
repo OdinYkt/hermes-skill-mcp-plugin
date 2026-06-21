@@ -1,0 +1,38 @@
+[project]
+name = "hermes-skill-mcp"
+version = "0.1.0"
+description = "Hermes Agent plugin — dynamic MCP server loading from skills"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.0.0",
+    "pyyaml>=6.0",
+]
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["hermes", "mcp", "plugin", "skill"]
+
+[dependency-groups]
+dev = [
+    "wemake-python-styleguide>=1.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.flake8]
+max-line-length = 80
+max-complexity = 6
+statistics = true
+count = true
+show-source = true
+format = "pylint"
+extend-exclude = [
+    "__pycache__",
+    ".git",
+    ".venv",
+    "*.egg-info",
+]
+ignore = []
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
