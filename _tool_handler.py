@@ -224,6 +224,7 @@ async def _handle_skill_mcp(
     )
     if not outcome[_JKEY_OK]:
         return outcome[_JKEY_ERROR]
+    mcp_config = outcome["config"]
 
     session_id = kwargs.get(_KEY_SESSION_ID, _DEFAULT_SESSION_ID)
     err = _validate_session(session_id)
@@ -235,7 +236,7 @@ async def _handle_skill_mcp(
         session_id,
         call_args[_KEY_SKILL_NAME],
         call_args[_KEY_MCP_NAME],
-        outcome["config"],
+        mcp_config,
     )
     if not outcome[_JKEY_OK]:
         return outcome[_JKEY_ERROR]
@@ -244,8 +245,12 @@ async def _handle_skill_mcp(
         outcome["client"],
         call_args,
         call_args[_KEY_MCP_NAME],
-        outcome["config"],
+        mcp_config,
     )
+    if not outcome[_JKEY_OK]:
+        return outcome[_JKEY_ERROR]
+
+    return _format_response(outcome[_JKEY_DATA], call_args.get(_KEY_GREP))
     if not outcome[_JKEY_OK]:
         return outcome[_JKEY_ERROR]
 

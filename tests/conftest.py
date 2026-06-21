@@ -65,6 +65,7 @@ def skill_with_mcp(tmp_path):
     def _create(skill_name, mcp_config=None):
         skill_dir = tmp_path / skill_name
         skill_dir.mkdir(exist_ok=True)
+        (skill_dir / "SKILL.md").write_text("# {}\n".format(skill_name))
         if mcp_config is not None:
             mcp_yaml = skill_dir / "mcp.yaml"
             mcp_yaml.write_text(yaml.dump(mcp_config))
