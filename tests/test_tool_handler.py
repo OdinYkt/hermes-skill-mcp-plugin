@@ -772,7 +772,7 @@ class TestMcpSdkMissing:
         )
 
         with patch(
-            "_tool_handler.check_mcp_sdk_available", return_value=False,
+            "_config.check_mcp_sdk_available", return_value=False,
         ):
             resp = await handler({
                 "skill_name": "sdk-skill",

@@ -214,7 +214,11 @@ async def _establish_connection(
         session = await _create_stdio_session(conn, server_config)
 
     conn.session = session
-    tools_resp = await session.list_tools()
+    try:
+        tools_resp = await session.list_tools()
+    except Exception:
+        manager._clients.pop(conn_key, None)
+        raise
     conn.tools = {
         tool_def.name: tool_def
         for tool_def in tools_resp.tools
