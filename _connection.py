@@ -120,7 +120,13 @@ def _import_mcp():
         ) from exc
 
     return {
-
+        "client_cls": ClientSession,
+        "server_params_cls": StdioServerParameters,
+        "stdio_client_fn": stdio_client,
+        "http_client_fn": streamablehttp_client,
+        "read_req_cls": ReadResourceRequest,
+        "get_prompt_cls": GetPromptRequest,
+    }
 
 # ---------------------------------------------------------------------------
 # Connection establishment helpers
