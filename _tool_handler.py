@@ -78,7 +78,7 @@ _EC_MCP_NOT_FOUND = "MCP_NOT_FOUND"
 _EC_NO_SESSION = "NO_SESSION"
 _EC_MCP_CONNECT_FAILED = "MCP_CONNECT_FAILED"
 _EC_MCP_SERVER_EXITED = "MCP_SERVER_EXITED"
-_EC_MCP_TOOLS_UNAVAILABLE = "MCP_TOOLS_UNAVAILABLE"
+_EC_MCP_CAPABILITY_MISSING = "MCP_CAPABILITY_MISSING"
 _EC_MCP_UNSUPPORTED_PROTOCOL = "MCP_UNSUPPORTED_PROTOCOL"
 _EC_MCP_TOOL_TIMEOUT = "MCP_TOOL_TIMEOUT"
 _EC_MCP_TOOL_NOT_FOUND = "MCP_TOOL_NOT_FOUND"
@@ -370,7 +370,7 @@ def _classify_runtime_error(message: str) -> tuple[str, bool]:
     """Map RuntimeError message to specific error code."""
     lower = message.lower()
     if "not support tools" in lower or "capabilit" in lower:
-        return (_EC_MCP_TOOLS_UNAVAILABLE, False)
+        return (_EC_MCP_CAPABILITY_MISSING, False)
     if "protocol" in lower or "version" in lower:
         return (_EC_MCP_UNSUPPORTED_PROTOCOL, False)
     return (_EC_MCP_CONNECT_FAILED, True)

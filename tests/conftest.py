@@ -80,6 +80,9 @@ def skill_without_mcp(tmp_path):
     def _create(skill_name):
         skill_dir = tmp_path / skill_name
         skill_dir.mkdir(exist_ok=True)
+        (skill_dir / "SKILL.md").write_text(
+            "# {}\n".format(skill_name),
+        )
         return skill_dir
 
     return _create

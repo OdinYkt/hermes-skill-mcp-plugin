@@ -105,19 +105,21 @@ def _import_mcp():
     Returns dict with keys: client_cls, server_params_cls,
     stdio_client_fn, http_client_fn, read_req_cls, get_prompt_cls.
     """
-    from mcp import ClientSession, StdioServerParameters  # noqa: WPS433
-    from mcp.client.stdio import stdio_client
-    from mcp.client.streamable_http import streamablehttp_client
-    from mcp.types import GetPromptRequest, ReadResourceRequest
+    try:
+        from mcp import (  # noqa: WPS433
+            ClientSession, StdioServerParameters,
+        )
+        from mcp.client.stdio import stdio_client
+        from mcp.client.streamable_http import (
+            streamablehttp_client,
+        )
+        from mcp.types import GetPromptRequest, ReadResourceRequest
+    except ImportError as exc:
+        raise RuntimeError(
+            "MCP SDK not installed. Run: pip install mcp",
+        ) from exc
 
     return {
-        "client_cls": ClientSession,
-        "server_params_cls": StdioServerParameters,
-        "stdio_client_fn": stdio_client,
-        "http_client_fn": streamablehttp_client,
-        "read_req_cls": ReadResourceRequest,
-        "get_prompt_cls": GetPromptRequest,
-    }
 
 
 # ---------------------------------------------------------------------------
@@ -207,28 +209,28 @@ async def _establish_connection(
     conn_key: str,
 ) -> Any:
     """Route to stdio or HTTP, init, cache tools, schedule idle."""
-    server_config = conn.server_config
-    if _KEY_URL in server_config:
-        session = await _create_http_session(conn, server_config)
-    else:
-        session = await _create_stdio_session(conn, server_config)
-
-    conn.session = session
     try:
+        server_config = conn.server_config
+        if _KEY_URL in server_config:
+            session = await _create_http_session(conn, server_config)
+        else:
+            session = await _create_stdio_session(conn, server_config)
+
+        conn.session = session
         tools_resp = await session.list_tools()
+        conn.tools = {
+            tool_def.name: tool_def
+            for tool_def in tools_resp.tools
+        }
+        _reschedule_idle(manager, conn_key, server_config)
+        logger.info(
+            "MCP connection established: %s (skill=%s, mcp=%s)",
+            conn_key, conn.skill_name, conn.mcp_name,
+        )
+        return session
     except Exception:
         manager._clients.pop(conn_key, None)
         raise
-    conn.tools = {
-        tool_def.name: tool_def
-        for tool_def in tools_resp.tools
-    }
-    _reschedule_idle(manager, conn_key, server_config)
-    logger.info(
-        "MCP connection established: %s (skill=%s, mcp=%s)",
-        conn_key, conn.skill_name, conn.mcp_name,
-    )
-    return session
 
 
 # ---------------------------------------------------------------------------
