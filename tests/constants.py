@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-PLUGIN_PATH = "/opt/hermes/plugins/skill-mcp"
+PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp"
 SKILL_PATH = "/opt/data/skills/secret-skill"
 SKILL_NAME = "secret-skill"
 SERVER_NAME = "secret"
@@ -22,15 +22,29 @@ MODEL_KEY = "model"
 
 def make_manager():
     """Create a fresh SkillMcpManager instance."""
+    import sys
     from importlib import util as iutil
 
     plugin_dir = Path(PLUGIN_PATH)
-    spec = iutil.spec_from_file_location(
+    plugin_dir_str = str(plugin_dir)
+    if plugin_dir_str not in sys.path:
+        sys.path.insert(0, plugin_dir_str)
+
+    # Pre-load _security so lazy imports in _connection.py work
+    sec_spec = iutil.spec_from_file_location(
+        "_security", plugin_dir / "_security.py",
+    )
+    sec_mod = iutil.module_from_spec(sec_spec)
+    sys.modules["_security"] = sec_mod
+    sec_spec.loader.exec_module(sec_mod)
+
+    conn_spec = iutil.spec_from_file_location(
         "_connection", plugin_dir / "_connection.py",
     )
-    mod = iutil.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.SkillMcpManager()
+    conn_mod = iutil.module_from_spec(conn_spec)
+    sys.modules["_connection"] = conn_mod
+    conn_spec.loader.exec_module(conn_mod)
+    return conn_mod.SkillMcpManager()
 
 
 @asynccontextmanager
@@ -44,12 +58,13 @@ async def connected_manager(skill_name, server_name, server_config):
         await manager.close()
 
 
-async def _connect(manager, skill_name, server_name, server_config) -> None:
+async def _connect(  # noqa: WPS210
+        manager, skill_name, server_name, server_config,
+    ) -> None:
     """Connect manager to MCP server."""
-    conn = manager.get_or_create_client(
+    await manager.get_or_create_client(
         skill_name, server_name, server_config,
     )
-    await manager.connect(conn)
 
 
 def run_hermes_e2e(args: list, cfg: dict) -> str:

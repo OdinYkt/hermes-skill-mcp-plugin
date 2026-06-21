@@ -3,3 +3,24 @@ __pycache__/
 .venv/
 .pytest_cache/
 *.egg-info/
+
+dist/
+build/
+.eggs/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker cache
+*.dockerignore
+
+# Secrets
+.env
+*.env.local

@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 import pytest
 
-PLUGIN_PATH = "/opt/hermes/plugins/skill-mcp"
+PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp"
 
 
 def import_plugin_module(module_name: str):
@@ -47,3 +47,42 @@ def e2e_config():
         "url": os.environ.get("HERMES_API_URL", ""),
         "model": os.environ.get("HERMES_API_MODEL", ""),
     }
+
+
+@pytest.fixture
+def temp_skills_dir(tmp_path):
+    """Temporary skills directory."""
+    skills_dir = tmp_path / "skills"
+    skills_dir.mkdir()
+    return skills_dir
+
+
+@pytest.fixture
+def skill_with_mcp(tmp_path):
+    """Fixture factory: create temp skill dir with mcp.yaml."""
+    import yaml
+
+    def _create(skill_name, mcp_config=None):
+        skill_dir = tmp_path / skill_name
+        skill_dir.mkdir(exist_ok=True)
+        (skill_dir / "SKILL.md").write_text("# {}\n".format(skill_name))
+        if mcp_config is not None:
+            mcp_yaml = skill_dir / "mcp.yaml"
+            mcp_yaml.write_text(yaml.dump(mcp_config))
+        return skill_dir
+    return _create
+
+
+@pytest.fixture
+def skill_without_mcp(tmp_path):
+    """Fixture factory: create temp skill dir without mcp.yaml."""
+
+    def _create(skill_name):
+        skill_dir = tmp_path / skill_name
+        skill_dir.mkdir(exist_ok=True)
+        (skill_dir / "SKILL.md").write_text(
+            "# {}\n".format(skill_name),
+        )
+        return skill_dir
+
+    return _create
