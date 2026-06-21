@@ -1,10 +1,10 @@
 # hermes-skill-mcp
 
-Dynamic MCP server loading from Hermes skills. Skills carry MCP servers via
-`mcp.yaml` sidecar. Agent calls `skill_mcp(skill_name, mcp_name, tool_name, arguments)`.
-No `config.yaml` editing. No restart. One tool in schema.
+Let Hermes skills bring their own MCP servers. Drop a `mcp.yaml` next to
+any `SKILL.md` and the agent can call those servers through one tool —
+no config editing, no restart.
 
-## Installation
+## Install
 
 ```bash
 git clone https://github.com/aqa-vibes/hermes-skill-mcp-plugin.git \
@@ -12,19 +12,11 @@ git clone https://github.com/aqa-vibes/hermes-skill-mcp-plugin.git \
 hermes plugins enable skill-mcp
 ```
 
-Hermes auto-discovers plugins from `~/.hermes/plugins/`.
-
-Verify:
-
-```bash
-hermes plugins list
-# → skill-mcp v0.1.0 (1 tool, 1 hook)
-```
+To update later: `cd ~/.hermes/plugins/skill-mcp && git pull`
 
 ## Usage
-## Usage
 
-1. Add `mcp.yaml` beside any `SKILL.md`:
+1. Add `mcp.yaml` beside a `SKILL.md`:
 
 ```yaml
 sqlite:
@@ -33,53 +25,65 @@ sqlite:
   timeout: 30
 ```
 
-2. Agent calls:
+2. The agent can now call:
 
 ```
-skill_mcp(skill_name="my-skill", mcp_name="sqlite", tool_name="query", arguments={"sql": "SELECT 1"})
+skill_mcp(skill_name="my-skill", mcp_name="sqlite",
+          tool_name="query", arguments={"sql": "SELECT 1"})
 ```
 
-## Running Tests
+Also supports `resource_name` and `prompt_name` for MCP resources and
+prompts. Set `grep` to filter output lines.
 
-```bash
-./scripts/run-tests.sh
-```
+## Context overhead
 
-Requires Docker. Set `HERMES_API_KEY` env var for E2E tests (skipped otherwise).
+Without the plugin: agent has no access to skill MCP servers. With the
+plugin: one tool (`skill_mcp`) added to toolset `skill-mcp`. The tool
+description is ~80 tokens.
 
-## BDD Coverage Matrix
+> **TODO:** measure actual context token difference with/without plugin
+> enabled. Compare system prompt size, tool schema overhead, and per-turn
+> context for a typical 3-tool skill.
 
-68 scenarios across 11 features. Status: 135 tests, 0 failures.
+## What's tested
 
-| Feature | Scenarios | Status |
-|---|---|---|
-| F1: Plugin discovery & registration | 1.1-1.3 | 🟡 register(ctx) code exists, no direct test |
-| F2: MCP config discovery | 2.1-2.12 | ✅ 11/12 — 2.4 duplicate YAML not detected at parse |
-| F3: skill_mcp happy path | 3.1-3.6 | ✅ stdio tested, HTTP parse only |
-| F4: skill_mcp error cases | 4.1-4.15 | ✅ 15 error codes mapped in handler pipeline |
-| F5: Connection lifecycle | 5.1-5.9 | ✅ session keys, isolation, locking, shutdown |
-| F6: skill_view augmentation | 6.1-6.6 | ✅ hook + static MCP list |
-| F7: Security | 7.1-7.7 | 🟡 env filtering + redaction; denylist connect-time, PATH warning absent |
-| F8: Tool schema | 8.1-8.2 | ✅ schema + async handler signature |
-| F9: Timeouts | 9.1-9.3 | 🟡 HTTP passes timeout; stdio connect_timeout not enforced |
-| F10: Non-functional | 10.1-10.5 | ❌ not implemented — no perf tests, platform matrix untested |
-| F11: Config schema | reference | ✅ known fields, command/url XOR, defaults |
+135 tests pass in Docker, 0 failures. `./scripts/run-tests.sh` if you
+want to verify locally.
 
-## Architecture
+| Area | Coverage |
+|---|---|
+| Config parsing (12 scenarios) | ✅ env expansion, path resolution, defaults, validation |
+| Security (7 scenarios) | ✅ env filtering, credential redaction, denylist |
+| Connection lifecycle (9 scenarios) | ✅ lazy connect, session keys, concurrent locking, shutdown |
+| Error handling (15 scenarios) | ✅ all BDD error codes mapped |
+| skill_view augmentation (6 scenarios) | ✅ static MCP list in skill display |
+| Timeouts | 🟡 HTTP passes timeout; stdio connect_timeout not enforced |
+| HTTP transport | 🟡 config parsing tested; runtime HTTP not covered |
+| Duplicate YAML keys | ❌ YAML lib silently overwrites; no detection |
+
+## Known limitations
+
+- **Duplicate YAML keys**: PyYAML overwrites silently. If `mcp.yaml`
+  defines the same server name twice, the second entry wins. BDD 2.4
+  wants a warning — not implemented.
+- **stdio connect_timeout**: only HTTP transport respects it. stdio
+  connections don't have a timeout wrapper.
+- **No auto-update**: `git pull` in the plugin directory. Hermes has no
+  plugin manager.
+- **No perf benchmarks**: parse latency and cached overhead are not
+  measured yet.
+
+## Files
 
 ```
 src/hermes_skill_mcp/
-├── __init__.py          — register(ctx)
-├── _config.py           — mcp.yaml parser (F2)
-├── _security.py         — env filter, redaction (F7)
-├── _connection.py       — MCP manager (F3/F5)
-├── _tool_handler.py     — async handler (F4/F8)
-├── _skill_view_hook.py  — skill_view hook (F6)
-├── __main__.py          — pip-installable CLI
-└── plugin.yaml          — Hermes manifest
-```
-
-Place in `~/.hermes/plugins/skill-mcp/` and Hermes discovers it.
+├── __init__.py          register(ctx)
+├── _config.py           mcp.yaml → dict
+├── _security.py         env filter, redact, denylist
+├── _connection.py       MCP client cache, stdio/HTTP, lifecycle
+├── _tool_handler.py     async skill_mcp handler, 15 error codes
+├── _skill_view_hook.py  append MCP list to skill_view output
+└── plugin.yaml          Hermes manifest
 ```
 
 ## License
