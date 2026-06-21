@@ -252,8 +252,6 @@ async def _handle_skill_mcp(
 
     return _format_response(outcome[_JKEY_DATA], call_args.get(_KEY_GREP))
 
-    return _format_response(outcome[_JKEY_DATA], call_args.get(_KEY_GREP))
-
 
 # ---------------------------------------------------------------------------
 # Pipeline stage: check_prerequisites

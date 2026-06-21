@@ -1,5 +1,5 @@
 name: skill-mcp
-version: 0.1.0
+version: 0.2.0
 description: "Dynamic MCP server loading from skills. Skills carry their own MCP servers via mcp.yaml sidecar."
 kind: standalone
 author: Hermes Agent

@@ -24,3 +24,7 @@ Thumbs.db
 # Secrets
 .env
 *.env.local
+
+# Dev plans
+sisyphus/ralph-loop.local.md
+.sisyphus/ralph-loop.local.md
