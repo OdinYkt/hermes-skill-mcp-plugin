@@ -1,6 +1,6 @@
 # Hermes-Skill-MCP Production Readiness Plan v2
 
-**State**: 144/150 tests, 5 fail. BDD: 41 IMPLEMENTED, 11 PARTIAL, 14 MISSING.
+**State**: 135/135 tests, 0 fail. BDD: 41 IMPLEMENTED, 11 PARTIAL, 14 MISSING, 2 UNTESTABLE.
 **Goal**: Production-ready — 135 tests, 0 failures, README, wemake clean.
 
 ## Root Causes of 5 Failing Tests
@@ -118,6 +118,6 @@
 
 ### Task 17: Final Docker verification
 **QA**: `./scripts/run-tests.sh 2>&1 | tail -5`
-**Expected**: `155+ passed, 0 failed, X skipped` (some tests skip without API key, perf tests skip without -m slow flag)
-**Also**: `docker run --rm hermes-test:debug flake8 /opt/hermes/plugins/skill-mcp/*.py --max-line-length=80 | grep -v ".venv" | grep -v "noqa"`
+**Expected**: `135 passed, 0 failed, 1 skipped` (E2E test skips without HERMES_API_KEY)
+**Also**: `docker run --rm hermes-test:ci sh -c 'cd /opt/hermes/plugins/skill-mcp && flake8 *.py --max-line-length=80'`
 **Expected**: 0 wemake violations on source files.

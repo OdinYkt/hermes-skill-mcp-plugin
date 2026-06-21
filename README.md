@@ -51,7 +51,7 @@ Requires Docker. Set `HERMES_API_KEY` env var for E2E tests (skipped otherwise).
 | F7: Security | 7.1-7.7 | 🟡 env filtering + redaction; denylist connect-time, PATH warning absent |
 | F8: Tool schema | 8.1-8.2 | ✅ schema + async handler signature |
 | F9: Timeouts | 9.1-9.3 | 🟡 HTTP passes timeout; stdio connect_timeout not enforced |
-| F10: Non-functional | 10.1-10.5 | 🟡 perf tests marked @pytest.mark.slow |
+| F10: Non-functional | 10.1-10.5 | ❌ not implemented — no perf tests, platform matrix untested |
 | F11: Config schema | reference | ✅ known fields, command/url XOR, defaults |
 
 ## Architecture
