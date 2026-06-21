@@ -4,15 +4,22 @@ version = "0.1.0"
 description = "Hermes Agent plugin — dynamic MCP server loading from skills"
 requires-python = ">=3.11"
 dependencies = [
-    "mcp>=1.0.0",
+    "mcp>=1.0.0,<2",
     "pyyaml>=6.0",
 ]
 readme = "README.md"
 license = { text = "MIT" }
 keywords = ["hermes", "mcp", "plugin", "skill"]
-
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
 [dependency-groups]
-dev = [
+[dependency-groups]
     "wemake-python-styleguide>=1.0",
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
@@ -31,8 +38,11 @@ extend-exclude = [
     ".venv",
     "*.egg-info",
 ]
-ignore = []
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+
+[tool.setuptools.packages.find]
+where = ["src"]

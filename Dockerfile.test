@@ -7,7 +7,7 @@ FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PLAYWRIGHT_BROWSERS_PATH=/opt/hermes/.playwright \
-    PYTHONPATH=/opt/hermes/plugins/skill-mcp \
+    PYTHONPATH=/opt/hermes/plugins \
     NODE_ENV=production
 
 # System dependencies
@@ -29,9 +29,9 @@ RUN pip install --no-cache-dir pytest pytest-asyncio pyyaml flake8 wemake-python
 RUN mkdir -p /opt/data/skills /opt/data/logs /root/.hermes
 
 # Copy plugin source into Hermes plugin dir
-RUN mkdir -p /opt/hermes/plugins/skill-mcp
-COPY *.py /opt/hermes/plugins/skill-mcp/
-COPY plugin.yaml /opt/hermes/plugins/skill-mcp/
+RUN mkdir -p /opt/hermes/plugins/hermes_skill_mcp
+COPY src/hermes_skill_mcp/*.py /opt/hermes/plugins/hermes_skill_mcp/
+COPY src/hermes_skill_mcp/plugin.yaml /opt/hermes/plugins/hermes_skill_mcp/
 
 # Copy test fixtures
 COPY fixtures/magic_server.py /opt/data/magic_server.py

@@ -7,10 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from _tool_handler import (
+from hermes_skill_mcp._tool_handler import (
     SKILL_MCP_SCHEMA,
 )
-from _tool_handler import (
+from hermes_skill_mcp._tool_handler import (
     McpConnectionError,
     McpServerExitedError,
     McpToolExecutionError,

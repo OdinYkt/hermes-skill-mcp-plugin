@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from _connection import SkillMcpManager
+from hermes_skill_mcp._connection import SkillMcpManager
 
 # ============================================================================
 # Mock helpers

@@ -15,7 +15,7 @@ import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-import _security
+import hermes_skill_mcp._security as _security
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------

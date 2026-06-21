@@ -135,7 +135,7 @@ def _import_mcp():
 
 def _check_command_allowed(command: str, mcp_name: str) -> None:
     """Raise if command is denied for MCP server."""
-    from _security import is_command_allowed
+    from hermes_skill_mcp._security import is_command_allowed
 
     if not is_command_allowed(command):
         raise RuntimeError(
@@ -164,7 +164,7 @@ async def _create_stdio_session(
     command = server_config[_KEY_COMMAND]
     _check_command_allowed(command, conn.mcp_name)
 
-    from _security import filter_mcp_environment
+    from hermes_skill_mcp._security import filter_mcp_environment
 
     env = filter_mcp_environment(server_config.get(_KEY_ENV, {}))
     params = mcp_types["server_params_cls"](

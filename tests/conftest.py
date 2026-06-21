@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 import pytest
 
-PLUGIN_PATH = "/opt/hermes/plugins/skill-mcp"
+PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp"
 
 
 def import_plugin_module(module_name: str):

@@ -21,8 +21,8 @@ import re as _re
 from pathlib import Path as _Path
 from typing import Any, Callable
 
-import _config
-import _security
+import hermes_skill_mcp._config as _config
+import hermes_skill_mcp._security as _security
 
 logger = logging.getLogger(__name__)
 
