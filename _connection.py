@@ -332,8 +332,9 @@ async def _execute_tool_call(
             f" {tool_timeout}s on MCP server '{mcp_name}'."
         ) from None
     except Exception:
-        manager._clients.pop(conn_key, None)
-        await _close_connection_safely(conn)
+        conn = manager._clients.pop(conn_key, None)
+        if conn is not None:
+            await _close_connection_safely(conn)
         raise
 
 
@@ -350,8 +351,9 @@ async def _execute_resource_read(
             mcp_types["read_req_cls"](uri=resource_name),
         )
     except Exception:
-        manager._clients.pop(conn_key, None)
-        await _close_connection_safely(conn)
+        conn = manager._clients.pop(conn_key, None)
+        if conn is not None:
+            await _close_connection_safely(conn)
         raise
 
 
@@ -371,8 +373,9 @@ async def _execute_prompt_get(
             ),
         )
     except Exception:
-        manager._clients.pop(conn_key, None)
-        await _close_connection_safely(conn)
+        conn = manager._clients.pop(conn_key, None)
+        if conn is not None:
+            await _close_connection_safely(conn)
         raise
 
 
