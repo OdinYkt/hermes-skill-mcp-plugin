@@ -265,7 +265,7 @@ class TestSkillViewHook:
             args={},
         )
 
-        src_root = Path(__file__).resolve().parents[3]
+        src_root = Path(__file__).resolve().parents[2]
         src = src_root / "plugins/skill-mcp/_skill_view_hook.py"
         source_text = src.read_text(encoding="utf-8")  # noqa: WPS226
 

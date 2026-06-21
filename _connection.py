@@ -64,7 +64,7 @@ def _client_key(
     session_id: str, skill_name: str, mcp_name: str,
 ) -> str:
     """Build cache key for a (session, skill, mcp) triple."""
-    return f"{session_id}::{skill_name}::{mcp_name}"
+    return f"{session_id}:{skill_name}:{mcp_name}"
 
 
 def _extract_args(server_config: dict) -> list:
@@ -374,10 +374,9 @@ async def call_resource(
     session_id: str = "",
 ) -> Any:
     """Connect to MCP server and read a resource."""
-    conn = manager.get_or_create_client(
-        skill_name, mcp_name, server_config, session_id,
+    session = await manager.get_or_create_client(
+        skill_name, mcp_name, server_config, session_id=session_id,
     )
-    session = await manager.connect(conn, session_id=session_id)
     conn_key = _client_key(session_id, skill_name, mcp_name)
     _reschedule_idle(manager, conn_key, server_config)
     return await _execute_resource_read(
@@ -395,10 +394,9 @@ async def call_prompt(
     session_id: str = "",
 ) -> Any:
     """Connect to MCP server and get a prompt."""
-    conn = manager.get_or_create_client(
-        skill_name, mcp_name, server_config, session_id,
+    session = await manager.get_or_create_client(
+        skill_name, mcp_name, server_config, session_id=session_id,
     )
-    session = await manager.connect(conn, session_id=session_id)
     conn_key = _client_key(session_id, skill_name, mcp_name)
     _reschedule_idle(manager, conn_key, server_config)
     return await _execute_prompt_get(
@@ -432,7 +430,7 @@ class SkillMcpManager:
     # Public API
     # ------------------------------------------------------------------
 
-    def get_or_create_client(
+    async def get_or_create_client(
         self,
         arg1: str,
         arg2: str,
@@ -440,12 +438,13 @@ class SkillMcpManager:
         arg4: dict | None = None,
         *,
         session_id: str | None = None,
-    ) -> McpConnection:
-        """Get existing or create new MCP client connection.
+    ) -> Any:
+        """Get or create connected MCP client session.
 
         Supports two call signatures:
-        - Old (3 args): (skill_name, mcp_name, server_config)
-        - New (4 args): (session_id, skill_name, mcp_name, config)
+        - (session_id, skill_name, mcp_name, config) — 4 args, legacy
+        - (skill_name, mcp_name, server_config) — 3 args, current
+        Returns an initialized ClientSession.
         """
         if arg4 is not None:
             actual_sid, skill_nm, mcp_nm, srv_conf = (
@@ -459,15 +458,26 @@ class SkillMcpManager:
             actual_sid = ""
         conn_key = _client_key(actual_sid, skill_nm, mcp_nm)
         existing = self._clients.get(conn_key)
-        if existing is not None:
-            return existing
-        conn = McpConnection(
+        if existing is not None and existing.session is not None:
+            return existing.session
+        conn = existing or McpConnection(
             server_config=srv_conf,
             skill_name=skill_nm,
             mcp_name=mcp_nm,
         )
         self._clients[conn_key] = conn
-        return conn
+        return await self._connect_and_return(conn, conn_key, actual_sid)
+
+    async def _connect_and_return(
+        self, conn: McpConnection, conn_key: str,
+        session_id: str,
+    ) -> Any:
+        """Connect and return session, with lock."""
+        lock = _ensure_lock(self._locks, conn_key)
+        async with lock:
+            if conn.session is not None:
+                return conn.session
+            return await _establish_connection(self, conn, conn_key)
 
     async def connect(
         self,
@@ -497,10 +507,9 @@ class SkillMcpManager:
         session_id: str = "",
     ) -> Any:
         """Connect to MCP server and call a tool."""
-        conn = self.get_or_create_client(
-            skill_name, mcp_name, server_config, session_id,
+        session = await self.get_or_create_client(
+            skill_name, mcp_name, server_config, session_id=session_id,
         )
-        session = await self.connect(conn, session_id=session_id)
         conn_key = _client_key(session_id, skill_name, mcp_name)
         _reschedule_idle(self, conn_key, server_config)
         return await _execute_tool_call(

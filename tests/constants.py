@@ -60,7 +60,7 @@ async def connected_manager(skill_name, server_name, server_config):
 
 async def _connect(manager, skill_name, server_name, server_config) -> None:
     """Connect manager to MCP server."""
-    conn = manager.get_or_create_client(
+    conn = await manager.get_or_create_client(
         skill_name, server_name, server_config,
     )
     await manager.connect(conn)
