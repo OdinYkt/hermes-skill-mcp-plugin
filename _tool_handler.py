@@ -551,6 +551,10 @@ def _find_skill_dir(
             candidate / _SKILL_MD_FILENAME
         ).is_file():
             return candidate
+        if dir_path.name == skill_name and (
+            dir_path / _SKILL_MD_FILENAME
+        ).is_file():
+            return dir_path
     return None
 
 

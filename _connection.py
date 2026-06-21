@@ -431,22 +431,39 @@ class SkillMcpManager:
     # Public API
     # ------------------------------------------------------------------
 
-    def get_or_create_client(
+    async def get_or_create_client(
         self,
-        skill_name: str,
-        mcp_name: str,
-        server_config: dict,
-        session_id: str = "",
+        arg1: str,
+        arg2: str,
+        arg3: str | dict,
+        arg4: dict | None = None,
+        *,
+        session_id: str | None = None,
     ) -> McpConnection:
-        """Get existing or create new MCP client connection."""
-        conn_key = _client_key(session_id, skill_name, mcp_name)
+        """Get existing or create new MCP client connection.
+
+        Supports two call signatures:
+        - Old (3 args): (skill_name, mcp_name, server_config)
+        - New (4 args): (session_id, skill_name, mcp_name, config)
+        """
+        if arg4 is not None:
+            actual_sid, skill_nm, mcp_nm, srv_conf = (
+                arg1, arg2, arg3, arg4
+            )
+        elif session_id is not None:
+            skill_nm, mcp_nm, srv_conf = arg1, arg2, arg3
+            actual_sid = session_id
+        else:
+            skill_nm, mcp_nm, srv_conf = arg1, arg2, arg3
+            actual_sid = ""
+        conn_key = _client_key(actual_sid, skill_nm, mcp_nm)
         existing = self._clients.get(conn_key)
         if existing is not None:
             return existing
         conn = McpConnection(
-            server_config=server_config,
-            skill_name=skill_name,
-            mcp_name=mcp_name,
+            server_config=srv_conf,
+            skill_name=skill_nm,
+            mcp_name=mcp_nm,
         )
         self._clients[conn_key] = conn
         return conn
@@ -535,6 +552,16 @@ class SkillMcpManager:
             "MCP connection closed: %s (skill=%s, mcp=%s)",
             session_id, skill_name, mcp_name,
         )
+
+    def _make_key(
+        self, session_id: str, skill_name: str, mcp_name: str,
+    ) -> str:
+        """Build cache key for a (session, skill, mcp) triple."""
+        return _client_key(session_id, skill_name, mcp_name)
+
+    def get_connected_servers(self) -> list[str]:
+        """Return list of connected server keys."""
+        return list(self._clients.keys())
 
     async def close(self, session_id: str = "") -> None:
         """Close all MCP connections for a session concurrently.

@@ -101,7 +101,7 @@ class TestMcpConnection:
         ):
             manager = make_manager()
             session = await manager.connect(
-                manager.get_or_create_client(
+                await manager.get_or_create_client(
                     SKILL_NAME, SERVER_NAME, server_config,
                 ),
             )
@@ -124,10 +124,10 @@ class TestMcpConnection:
     @pytest.mark.asyncio
     async def test_reuse(self, server_config):
         manager = make_manager()
-        first = manager.get_or_create_client(
+        first = await manager.get_or_create_client(
             SKILL_NAME, SERVER_NAME, server_config,
         )
-        second = manager.get_or_create_client(
+        second = await manager.get_or_create_client(
             SKILL_NAME, SERVER_NAME, server_config,
         )
         assert first is second
