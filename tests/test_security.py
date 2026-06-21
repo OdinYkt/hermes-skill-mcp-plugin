@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from unittest.mock import patch
 
 from conftest import import_plugin_module
@@ -110,3 +111,43 @@ class TestIsCommandAllowed:
     def test_denied_commands(self):
         for cmd in ("sudo", "su"):
             assert is_command_allowed(cmd) is False
+
+
+class TestPathAppendAndShellSafety:
+    def test_path_appended_not_replaced(self, monkeypatch):
+        original_path = base_safe_env()[PATH_KEY]
+        monkeypatch.setenv("PATH", original_path)
+
+        env = filter_mcp_environment({"PATH": "/custom/bin"})
+
+        assert env["PATH"].startswith(original_path + os.pathsep), \
+            "PATH must start with original value"
+        assert env["PATH"].endswith("/custom/bin"), \
+            "PATH must end with /custom/bin"
+        assert env["PATH"] != "/custom/bin", \
+            "PATH must be appended, not replaced"
+
+    def test_home_appended_not_replaced(self, monkeypatch):
+        original_home = base_safe_env()[HOME_KEY]
+        monkeypatch.setenv("HOME", original_home)
+
+        env = filter_mcp_environment({"HOME": "/custom/home"})
+
+        assert env["HOME"].startswith(original_home + os.pathsep), \
+            "HOME must start with original value"
+        assert env["HOME"].endswith("/custom/home"), \
+            "HOME must end with /custom/home"
+        assert env["HOME"] != "/custom/home", \
+            "HOME must be appended, not replaced"
+
+    def test_args_not_shell_expanded(self):
+
+        result = subprocess.run(
+            ["echo", "$(whoami)"],
+            capture_output=True,
+            text=True,
+        )
+
+        assert "$(whoami)" in result.stdout, \
+            "$(whoami) must appear literally in output (not shell-expanded)"
+

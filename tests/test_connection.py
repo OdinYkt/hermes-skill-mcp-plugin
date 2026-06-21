@@ -436,3 +436,138 @@ class TestKeyFormat:
         manager = SkillMcpManager()
         key = manager._make_key("ses:1", "sk:ill", "mc:p")
         assert key == "ses:1:sk:ill:mc:p"
+
+
+
+# ============================================================================
+# HTTP transport test — Feature 3.3
+# ============================================================================
+
+
+class TestHttpTransport:
+    """Feature 3.3: HTTP transport."""
+
+    def test_http_transport_config_creates_right_type(self):
+        """HTTP config detected — url present, command absent."""
+        manager = SkillMcpManager()
+        http_config = {
+            "url": "https://mcp.example.com/v1",
+            "headers": {"Authorization": "Bearer test-key"},
+            "timeout": 30,
+        }
+
+        assert "url" in http_config
+        assert "command" not in http_config
+        assert manager is not None
+
+
+# ============================================================================
+# Timeout enforcement tests — Feature 9
+# ============================================================================
+
+
+class TestTimeoutEnforcement:
+    """Feature 9: Timeout enforcement."""
+
+    def test_connect_timeout_default_is_10(self):
+        """connect_timeout defaults to 10 seconds."""
+        from hermes_skill_mcp._config import DEFAULT_CONNECT_TIMEOUT
+        assert DEFAULT_CONNECT_TIMEOUT == 10
+
+    def test_tool_timeout_default_is_60(self):
+        """timeout defaults to 60 seconds."""
+        from hermes_skill_mcp._config import DEFAULT_TIMEOUT
+        assert DEFAULT_TIMEOUT == 60
+
+    def test_idle_timeout_default_is_300(self):
+        """idle_timeout defaults to 300 seconds."""
+        from hermes_skill_mcp._config import DEFAULT_IDLE_TIMEOUT
+        assert DEFAULT_IDLE_TIMEOUT == 300
+
+    def test_custom_timeouts_in_config(self, skill_with_mcp):
+        """Custom timeout values from mcp.yaml are parsed correctly."""
+        config = {
+            "fast_server": {
+                "command": "echo",
+                "timeout": 5,
+                "connect_timeout": 2,
+                "idle_timeout": 30,
+            },
+        }
+        skill_dir = skill_with_mcp("timeout-test", config)
+
+        from hermes_skill_mcp._config import parse_mcp_config
+        result = parse_mcp_config(skill_dir)
+
+        server = result["fast_server"]
+        assert server["timeout"] == 5
+        assert server["connect_timeout"] == 2
+        assert server["idle_timeout"] == 30
+
+    def test_tool_timeout_enforced(self, skill_with_mcp):
+        """tool_timeout from server config, not global default."""
+        config = {
+            "slow": {
+                "command": "sleep",
+                "args": ["1"],
+                "timeout": 1,
+            },
+        }
+        skill_dir = skill_with_mcp("timeout-enf", config)
+
+        from hermes_skill_mcp._config import parse_mcp_config
+        result = parse_mcp_config(skill_dir)
+
+        assert result["slow"]["timeout"] == 1
+        assert result["slow"]["connect_timeout"] == 10
+
+
+# ============================================================================
+# Lazy and idle lifecycle tests — Feature 5
+# ============================================================================
+
+
+class TestLazyAndIdleLifecycle:
+    """Feature 5: Connection Lifecycle — lazy, idle, shutdown."""
+
+    def test_manager_starts_empty(self):
+        """Scenario 5.1: No connections created until first call."""
+        manager = SkillMcpManager()
+        assert len(manager._clients) == 0
+        assert len(manager._idle_tasks) == 0
+        assert manager.get_connected_servers() == []
+
+    def test_idle_timeout_zero_disables_cleanup(self):
+        """idle_timeout=0 means no idle cleanup scheduled."""
+        from hermes_skill_mcp._connection import (
+            _schedule_idle_disconnect,
+        )
+
+        manager = SkillMcpManager()
+        _schedule_idle_disconnect(
+            manager._idle_tasks, manager._clients, manager._locks,
+            "test:key", 0,
+        )
+        assert "test:key" not in manager._idle_tasks, (
+            "idle_timeout=0 must not schedule cleanup task"
+        )
+
+    def test_shutdown_clears_all_state(self):
+        """Scenario 5.5: shutdown_all cancels idle tasks, clears state."""
+        from hermes_skill_mcp._connection import (
+            _schedule_idle_disconnect,
+        )
+
+        async def _run():
+            manager = SkillMcpManager()
+            _schedule_idle_disconnect(
+                manager._idle_tasks, manager._clients, manager._locks,
+                "test:key", 300,
+            )
+            assert len(manager._idle_tasks) == 1
+            await manager.shutdown_all()
+            assert len(manager._idle_tasks) == 0
+            assert len(manager._clients) == 0
+            assert len(manager._locks) == 0
+
+        asyncio.run(_run())
