@@ -772,7 +772,7 @@ class TestMcpSdkMissing:
         )
 
         with patch(
-            "_config.check_mcp_sdk_available", return_value=False,
+            "hermes_skill_mcp._config.check_mcp_sdk_available",
         ):
             resp = await handler({
                 "skill_name": "sdk-skill",
