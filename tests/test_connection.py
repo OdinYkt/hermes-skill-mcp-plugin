@@ -70,13 +70,20 @@ def _make_mock_mcp(has_tools: bool = True):
                 self._session.initialize = AsyncMock(
                     return_value=_make_init_result()
                 )
-
+                tools_mock = MagicMock()
+                tools_mock.tools = []
+                self._session.list_tools = AsyncMock(
+                    return_value=tools_mock
+                )
             async def __aenter__(self):
                 return self._session
 
             async def __aexit__(self, *args):
                 pass  # noqa: WPS420 — intentional stub
 
+        @staticmethod
+        def StdioServerParameters(**kwargs):
+            return kwargs
     return MockMcpModule()
 
 
@@ -86,7 +93,12 @@ def _make_full_mocks(has_tools: bool = True):
     Returns (mock_mcp, mock_stdio)."""
     mock_mcp = _make_mock_mcp(has_tools=has_tools)
     mock_stdio = _make_mock_stdio()
-    return mock_mcp, mock_stdio
+    mock_streamable_http = MagicMock()
+    mock_streamable_http.streamablehttp_client = MagicMock()
+    mock_types = MagicMock()
+    mock_types.GetPromptRequest = MagicMock()
+    mock_types.ReadResourceRequest = MagicMock()
+    return mock_mcp, mock_stdio, mock_streamable_http, mock_types
 
 
 def _stdlib_config() -> dict:
@@ -112,7 +124,7 @@ class TestBasicLifecycle:
 
     @pytest.mark.asyncio
     async def test_first_call_creates_connection(self):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -127,7 +139,7 @@ class TestBasicLifecycle:
 
     @pytest.mark.asyncio
     async def test_second_call_reuses_cached_connection(self):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -148,7 +160,7 @@ class TestBasicLifecycle:
     async def test_different_session_ids_yield_different_keys(  # noqa: WPS118
         self,
     ):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -167,7 +179,7 @@ class TestBasicLifecycle:
 
     @pytest.mark.asyncio
     async def test_disconnect_removes_from_cache(self):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -186,7 +198,7 @@ class TestBasicLifecycle:
 
     @pytest.mark.asyncio
     async def test_disconnect_idempotent(self):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -203,7 +215,7 @@ class TestBasicLifecycle:
 
     @pytest.mark.asyncio
     async def test_shutdown_all_closes_all_connections(self):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -231,7 +243,7 @@ class TestBasicLifecycle:
 
     @pytest.mark.asyncio
     async def test_get_connected_servers_lists_keys(self):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -263,7 +275,7 @@ class TestConcurrency:
     async def test_concurrent_different_keys_parallel(  # noqa: WPS118
         self,
     ):
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -287,7 +299,7 @@ class TestConcurrency:
         self,
     ):
         """Two parallel calls with same key → one connection created."""
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -307,7 +319,7 @@ class TestConcurrency:
     @pytest.mark.asyncio
     async def test_mixed_concurrent_calls(self):  # noqa: WPS210
         """Mix of same-key and different-key concurrent calls."""
-        mock_mcp, mock_stdio = _make_full_mocks()
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
@@ -363,7 +375,7 @@ class TestErrorHandling:
 
     @pytest.mark.asyncio
     async def test_server_lacks_tools_capability_raises(self):
-        mock_mcp, mock_stdio = _make_full_mocks(has_tools=False)
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks(has_tools=False)
 
         mod_map = {"mcp": mock_mcp, "mcp.client.stdio": mock_stdio}
         with patch.dict(sys.modules, mod_map):
