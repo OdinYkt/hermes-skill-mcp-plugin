@@ -50,6 +50,7 @@ _DEFAULT_SESSION_ID = "default"
 
 # JSON response keys
 _JKEY_OK = "ok"
+_JKEY_ERROR = "error"
 _JKEY_ERROR_CODE = "error_code"
 _JKEY_MESSAGE = "message"
 _JKEY_RETRYABLE = "retryable"
@@ -119,7 +120,7 @@ SKILL_MCP_SCHEMA: dict = {  # noqa: WPS407
         "Requires skill_name + mcp_name + exactly one of: "
         "tool_name, resource_name, prompt_name."
     ),
-    _S_PROPERTIES: {
+    "parameters": {
         _S_TYPE: _S_OBJECT,
         _S_PROPERTIES: {
             _KEY_SKILL_NAME: {

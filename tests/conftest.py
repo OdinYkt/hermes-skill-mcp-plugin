@@ -62,13 +62,13 @@ def skill_with_mcp(tmp_path):
     """Fixture factory: create temp skill dir with mcp.yaml."""
     import yaml
 
-    def _create(skill_name, mcp_config):
+    def _create(skill_name, mcp_config=None):
         skill_dir = tmp_path / skill_name
         skill_dir.mkdir(exist_ok=True)
-        mcp_yaml = skill_dir / "mcp.yaml"
-        mcp_yaml.write_text(yaml.dump(mcp_config))
+        if mcp_config is not None:
+            mcp_yaml = skill_dir / "mcp.yaml"
+            mcp_yaml.write_text(yaml.dump(mcp_config))
         return skill_dir
-
     return _create
 
 
