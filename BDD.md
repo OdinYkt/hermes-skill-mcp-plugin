@@ -852,3 +852,59 @@ If `type` is omitted, transport is inferred from `command`/`url` presence.
 - [ ] End-to-end: install plugin → enable toolset → load skill → `skill_view` shows MCP → `skill_mcp` calls tool → result used
 - [ ] Gateway multi-user: two sessions, same skill → isolated MCP processes
 - [ ] Plugin uninstall: `rm -rf ~/.hermes/plugins/skill-mcp/` → zero traces
+
+---
+
+## Feature 12: Nested Skill Directory Resolution
+
+Hermes production deployments organize skills as `skills/<category>/<name>/SKILL.md`.
+`_find_skill_dir` must resolve this nested layout in addition to flat `skills/<name>/SKILL.md`.
+
+### Scenario 12.1: Find flat-layout skill (regression guard)
+**Given** `skills/flat-skill/SKILL.md` exists  
+**When** `_find_skill_dir("flat-skill", [skills/])`  
+**Then** returns `skills/flat-skill`  
+
+### Scenario 12.2: Find nested-layout skill (the bug fix)
+**Given** `skills/devops/nested-skill/SKILL.md` exists  
+**When** `_find_skill_dir("nested-skill", [skills/])`  
+**Then** returns `skills/devops/nested-skill`  
+
+### Scenario 12.3: Find skill nested under different category
+**Given** `skills/software-development/deeply-nested/SKILL.md` exists  
+**When** `_find_skill_dir("deeply-nested", [skills/])`  
+**Then** returns `skills/software-development/deeply-nested`  
+
+### Scenario 12.4: Return None for skill that does not exist
+**Given** no directory named `nonexistent` anywhere under `skills/`  
+**When** `_find_skill_dir("nonexistent", [skills/])`  
+**Then** returns `None`  
+
+### Scenario 12.5: Return None for directory without SKILL.md
+**Given** `skills/empty-category/no-skill-md/` exists but has no `SKILL.md`  
+**When** `_find_skill_dir("no-skill-md", [skills/])`  
+**Then** returns `None`  
+
+### Scenario 12.6: Search across multiple skill_dirs
+**Given** `other-skills/unique-skill/SKILL.md` exists  
+**And** `skills/` also exists  
+**When** `_find_skill_dir("unique-skill", [other-skills/, skills/])`  
+**Then** returns `other-skills/unique-skill` (first match)  
+
+### Scenario 12.7: Flat-layout takes priority over nested
+**Given** `skills/duplicate-name/SKILL.md` exists (flat)  
+**And** `skills/category/duplicate-name/SKILL.md` exists (nested)  
+**When** `_find_skill_dir("duplicate-name", [skills/])`  
+**Then** returns `skills/duplicate-name` (flat, first match)  
+
+### Scenario 12.8: Do not recurse deeper than 2 levels
+**Given** `skills/a/b/c/SKILL.md` exists (3 levels deep)  
+**When** `_find_skill_dir("c", [skills/])`  
+**Then** returns `None`  
+**And** only `skills/<category>/<name>/SKILL.md` layout supported  
+
+### Scenario 12.9: Nested skill found in second skill_dir
+**Given** `skills/devops/target/SKILL.md` exists  
+**And** `optional-skills/` exists but has no `target` skill  
+**When** `_find_skill_dir("target", [optional-skills/, skills/])`  
+**Then** returns `skills/devops/target`  

@@ -545,7 +545,15 @@ def _find_skill_dir(
     skill_name: str,
     skill_dirs: list[_Path],
 ) -> _Path | None:
-    """Search skill_dirs for dir named *skill_name* containing SKILL.md."""
+    """Search skill_dirs for dir named *skill_name* containing SKILL.md.
+
+    Checks three layouts in priority order:
+    1. Flat: <skill_dir>/<skill_name>/SKILL.md
+    2. Skill dir itself: <skill_dir> is named <skill_name> with SKILL.md
+    3. Nested category: <skill_dir>/<category>/<skill_name>/SKILL.md
+
+    Only one level of category nesting is supported.
+    """
     for dir_path in skill_dirs:
         candidate = dir_path / skill_name
         if candidate.is_dir() and (
@@ -556,6 +564,15 @@ def _find_skill_dir(
             dir_path / _SKILL_MD_FILENAME
         ).is_file():
             return dir_path
+        if dir_path.is_dir():
+            for sub in dir_path.iterdir():
+                if not sub.is_dir():
+                    continue
+                nested = sub / skill_name
+                if nested.is_dir() and (
+                    nested / _SKILL_MD_FILENAME
+                ).is_file():
+                    return nested
     return None
 
 

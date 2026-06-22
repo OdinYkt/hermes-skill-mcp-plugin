@@ -318,6 +318,87 @@ class TestSkillDirResolution:
         assert resolved_dir is not None
         assert resolved_dir.resolve() == skill_dir.resolve()
 
+
+class TestNestedSkillDirResolution:
+    """Tests for nested (category-based) skill directory layout.
+
+    Hermes organizes skills as skills/<category>/<name>/SKILL.md
+    in production deployments. _find_skill_dir must resolve these.
+    """
+
+    def test_find_nested_skill_one_level_deep(self, tmp_path):
+        skills_root = tmp_path / "skills"
+        nested = skills_root / "devops" / "my-skill"
+        nested.mkdir(parents=True)
+        (nested / "SKILL.md").write_text("# my-skill")
+
+        result = _find_skill_dir("my-skill", [skills_root])
+
+        assert result is not None
+        assert result.resolve() == nested.resolve()
+
+    def test_find_nested_skill_different_category(self, tmp_path):
+        skills_root = tmp_path / "skills"
+        nested = skills_root / "software-development" / "plan"
+        nested.mkdir(parents=True)
+        (nested / "SKILL.md").write_text("# plan")
+
+        result = _find_skill_dir("plan", [skills_root])
+
+        assert result is not None
+        assert result.resolve() == nested.resolve()
+
+    def test_flat_takes_priority_over_nested(self, tmp_path):
+        skills_root = tmp_path / "skills"
+        flat = skills_root / "dup-skill"
+        flat.mkdir(parents=True)
+        (flat / "SKILL.md").write_text("# flat")
+        nested = skills_root / "category" / "dup-skill"
+        nested.mkdir(parents=True)
+        (nested / "SKILL.md").write_text("# nested")
+
+        result = _find_skill_dir("dup-skill", [skills_root])
+
+        assert result is not None
+        assert result.resolve() == flat.resolve()
+
+    def test_nested_without_skill_md_returns_none(self, tmp_path):
+        skills_root = tmp_path / "skills"
+        empty_nested = skills_root / "empty-cat" / "no-md"
+        empty_nested.mkdir(parents=True)
+
+        result = _find_skill_dir("no-md", [skills_root])
+
+        assert result is None
+
+    def test_nested_skill_searches_multiple_dirs(self, tmp_path):
+        first = tmp_path / "optional-skills"
+        first.mkdir()
+        second = tmp_path / "skills"
+        nested = second / "devops" / "target"
+        nested.mkdir(parents=True)
+        (nested / "SKILL.md").write_text("# target")
+
+        result = _find_skill_dir("target", [first, second])
+
+        assert result is not None
+        assert result.resolve() == nested.resolve()
+
+    def test_does_not_recurse_past_two_levels(self, tmp_path):
+        skills_root = tmp_path / "skills"
+        deep = skills_root / "a" / "b" / "c"
+        deep.mkdir(parents=True)
+        (deep / "SKILL.md").write_text("# deep")
+
+        result = _find_skill_dir("c", [skills_root])
+
+        assert result is None
+
+    def test_existing_flat_tests_still_pass(self, skill_with_mcp):
+        skill_dir = skill_with_mcp("test-skill")
+        result = _find_skill_dir("test-skill", [skill_dir.parent])
+        assert result is not None
+        assert result.resolve() == skill_dir.resolve()
     def test_resolve_skill_dirs_default(self):
         dirs = _resolve_skill_dirs(None)
         assert len(dirs) == 2
