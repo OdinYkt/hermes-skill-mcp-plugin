@@ -571,3 +571,149 @@ class TestLazyAndIdleLifecycle:
             assert len(manager._locks) == 0
 
         asyncio.run(_run())
+
+
+# ============================================================================
+# Stale connection recovery tests — Issue #9
+# ============================================================================
+
+
+class TestStaleConnectionRecovery:
+    """Issue #9: stale connection cleanup after timeout and health check."""
+
+    @pytest.mark.asyncio
+    async def test_timeout_cleans_up_stale_connection(self):
+        """TimeoutError must remove stale connection from cache."""
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
+        mock_sse = MagicMock()
+        mod_map = {
+            "mcp": mock_mcp,
+            "mcp.client.stdio": mock_stdio,
+            "mcp.client.streamable_http": mock_shttp,
+            "mcp.client.sse": mock_sse,
+            "mcp.types": mock_types,
+        }
+        with patch.dict(sys.modules, mod_map):
+            manager = SkillMcpManager()
+            config = _stdlib_config()
+            config["timeout"] = 0.01  # very short timeout
+
+            # Create a connection
+            session = await manager.get_or_create_client(
+                "s1", "skill_a", "time", config,
+            )
+            assert len(manager._clients) == 1
+
+            # Make call_tool hang → timeout
+            async def _hang_forever(*args, **kwargs):  # noqa: WPS430
+                await asyncio.sleep(999)
+
+            session.call_tool = AsyncMock(side_effect=_hang_forever)
+
+            with pytest.raises(RuntimeError, match="timed out"):
+                await manager.call_tool(
+                    "skill_a", "time", config, "some_tool",
+                    session_id="s1",
+                )
+
+            # Stale connection must be cleaned up
+            assert len(manager._clients) == 0
+
+    @pytest.mark.asyncio
+    async def test_health_check_detects_dead_session(self):
+        """Health check ping detects dead session and triggers reconnect."""
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
+        mock_sse = MagicMock()
+        mod_map = {
+            "mcp": mock_mcp,
+            "mcp.client.stdio": mock_stdio,
+            "mcp.client.streamable_http": mock_shttp,
+            "mcp.client.sse": mock_sse,
+            "mcp.types": mock_types,
+        }
+        with patch.dict(sys.modules, mod_map):
+            manager = SkillMcpManager()
+            config = _stdlib_config()
+
+            # Create initial connection
+            s1 = await manager.get_or_create_client(
+                "s1", "skill_a", "time", config,
+            )
+            assert len(manager._clients) == 1
+
+            # Simulate dead session: list_tools raises
+            s1.list_tools = AsyncMock(
+                side_effect=RuntimeError("Connection closed"),
+            )
+
+            # Next call should detect dead session, clean up, reconnect
+            s2 = await manager.get_or_create_client(
+                "s1", "skill_a", "time", config,
+            )
+
+            assert s2 is not None
+            assert len(manager._clients) == 1
+
+    @pytest.mark.asyncio
+    async def test_health_check_timeout_triggers_reconnect(self):
+        """Health check timeout (5s) triggers reconnect instead of 60s hang."""
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
+        mock_sse = MagicMock()
+        mod_map = {
+            "mcp": mock_mcp,
+            "mcp.client.stdio": mock_stdio,
+            "mcp.client.streamable_http": mock_shttp,
+            "mcp.client.sse": mock_sse,
+            "mcp.types": mock_types,
+        }
+        with patch.dict(sys.modules, mod_map):
+            manager = SkillMcpManager()
+            config = _stdlib_config()
+
+            # Create initial connection
+            s1 = await manager.get_or_create_client(
+                "s1", "skill_a", "time", config,
+            )
+
+            # Simulate hung session: list_tools hangs forever
+            async def _hang_forever(*args, **kwargs):  # noqa: WPS430
+                await asyncio.sleep(999)
+
+            s1.list_tools = AsyncMock(side_effect=_hang_forever)
+
+            # Next call should timeout health check quickly, reconnect
+            s2 = await manager.get_or_create_client(
+                "s1", "skill_a", "time", config,
+            )
+
+            assert s2 is not None
+            # Old stale session should have been cleaned up
+            assert len(manager._clients) == 1
+
+    @pytest.mark.asyncio
+    async def test_healthy_session_reused_without_reconnect(self):
+        """Healthy session passes health check and is reused (no reconnect)."""
+        mock_mcp, mock_stdio, mock_shttp, mock_types = _make_full_mocks()
+        mock_sse = MagicMock()
+        mod_map = {
+            "mcp": mock_mcp,
+            "mcp.client.stdio": mock_stdio,
+            "mcp.client.streamable_http": mock_shttp,
+            "mcp.client.sse": mock_sse,
+            "mcp.types": mock_types,
+        }
+        with patch.dict(sys.modules, mod_map):
+            manager = SkillMcpManager()
+            config = _stdlib_config()
+
+            s1 = await manager.get_or_create_client(
+                "s1", "skill_a", "time", config,
+            )
+
+            # list_tools still works (mock returns empty tools list)
+            s2 = await manager.get_or_create_client(
+                "s1", "skill_a", "time", config,
+            )
+
+            assert s1 is s2
+            assert len(manager._clients) == 1

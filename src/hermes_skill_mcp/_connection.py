@@ -359,6 +359,9 @@ async def _execute_tool_call(
             timeout=tool_timeout,
         )
     except asyncio.TimeoutError:
+        conn = manager._clients.pop(conn_key, None)
+        if conn is not None:
+            await _close_connection_safely(conn)
         raise RuntimeError(
             f"Tool '{tool_name}' timed out after"
             f" {tool_timeout}s on MCP server '{mcp_name}'."
@@ -510,7 +513,23 @@ class SkillMcpManager:
         conn_key = _client_key(actual_sid, skill_nm, mcp_nm)
         existing = self._clients.get(conn_key)
         if existing is not None and existing.session is not None:
-            return existing.session
+            # Health check: verify the session is still alive before reuse.
+            # If the MCP server process died (idle crash, SSH drop), the
+            # cached session is stale — a quick list_tools() ping detects
+            # this in 5s instead of hanging for the full tool timeout.
+            try:
+                await asyncio.wait_for(
+                    existing.session.list_tools(), timeout=5.0,
+                )
+                return existing.session
+            except (asyncio.TimeoutError, Exception):
+                conn = self._clients.pop(conn_key, None)
+                if conn is not None:
+                    await _close_connection_safely(conn)
+                logger.debug(
+                    "MCP connection health check failed, reconnecting: %s",
+                    conn_key,
+                )
         conn = existing or McpConnection(
             server_config=srv_conf,
             skill_name=skill_nm,
