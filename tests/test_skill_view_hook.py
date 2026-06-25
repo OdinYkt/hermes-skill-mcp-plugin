@@ -265,8 +265,9 @@ class TestSkillViewHook:
             args={},
         )
 
-        proj_root = Path(__file__).resolve().parents[1]
-        src = proj_root / "hermes_skill_mcp/_skill_view_hook.py"
+        from conftest import PLUGIN_PATH as _pp
+        proj_root = Path(_pp)
+        src = proj_root / "_skill_view_hook.py"
         source_text = src.read_text(encoding="utf-8")  # noqa: WPS226
 
         assert hook_output is None

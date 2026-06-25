@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp"
+PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp/hermes_skill_mcp"
 SKILL_PATH = "/opt/data/skills/secret-skill"
 SKILL_NAME = "secret-skill"
 SERVER_NAME = "secret"

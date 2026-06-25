@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 import pytest
 
-_CI_PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp"
+_CI_PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp/hermes_skill_mcp"
 _DEV_PLUGIN_PATH = str(Path(__file__).parent.parent / "hermes_skill_mcp")
 PLUGIN_PATH = _CI_PLUGIN_PATH if Path(_CI_PLUGIN_PATH).exists() else _DEV_PLUGIN_PATH
 
