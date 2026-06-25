@@ -7,7 +7,7 @@ FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PLAYWRIGHT_BROWSERS_PATH=/opt/hermes/.playwright \
-    PYTHONPATH=/opt/hermes/plugins \
+    PYTHONPATH=/opt/hermes/plugins/hermes_skill_mcp:/opt/hermes/plugins \
     NODE_ENV=production
 
 # System dependencies
