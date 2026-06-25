@@ -25,7 +25,7 @@ def _handle_version() -> None:  # noqa: WPS221
         and sys.argv[1] in ("--version", "-V")
     )  # noqa: WPS221
     if is_version:
-        from hermes_skill_mcp._metadata import PLUGIN_VERSION  # noqa: WPS433
+        from ._metadata import PLUGIN_VERSION  # noqa: WPS433
         print(f"hermes-skill-mcp v{PLUGIN_VERSION}")  # noqa: WPS421
         sys.exit(0)
 

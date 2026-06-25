@@ -19,6 +19,9 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 
+[project.entry-points."hermes_agent.plugins"]
+skill-mcp = "hermes_skill_mcp"
+
 [project.scripts]
 hermes-skill-mcp = "hermes_skill_mcp.__main__:main"
 
@@ -50,4 +53,4 @@ markers = ["slow: performance tests"]
 
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]

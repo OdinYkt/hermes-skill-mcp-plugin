@@ -30,8 +30,9 @@ RUN mkdir -p /opt/data/skills /opt/data/logs /root/.hermes
 
 # Copy plugin source into Hermes plugin dir
 RUN mkdir -p /opt/hermes/plugins/hermes_skill_mcp
-COPY src/hermes_skill_mcp/*.py /opt/hermes/plugins/hermes_skill_mcp/
-COPY src/hermes_skill_mcp/plugin.yaml /opt/hermes/plugins/hermes_skill_mcp/
+COPY plugin.yaml /opt/hermes/plugins/hermes_skill_mcp/
+COPY __init__.py /opt/hermes/plugins/hermes_skill_mcp/
+COPY hermes_skill_mcp/ /opt/hermes/plugins/hermes_skill_mcp/hermes_skill_mcp/
 
 # Copy test fixtures
 COPY fixtures/magic_server.py /opt/data/magic_server.py

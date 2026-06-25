@@ -20,18 +20,7 @@ from constants import (
 from constants import connected_manager, make_manager, run_hermes_e2e
 
 
-def import_plugin_module(module_name: str):
-    """Import a module from the skill-mcp plugin directory."""
-    plugin_dir = Path(PLUGIN_PATH)
-    file_name = module_name.split(".")[-1]
-    spec = importlib.util.spec_from_file_location(
-        module_name,
-        plugin_dir / "{}.py".format(file_name),
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
+from conftest import import_plugin_module  # noqa: WPS433
 
 
 

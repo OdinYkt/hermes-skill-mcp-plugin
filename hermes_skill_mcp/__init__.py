@@ -30,10 +30,13 @@ def register(ctx):
 
     All imports deferred — no module-level ImportError without mcp SDK.
     """
-    import _config
-    import _connection
-    import _skill_view_hook
-    import _tool_handler
+    try:
+        from . import _config, _connection, _skill_view_hook, _tool_handler
+    except ImportError:
+        import _config
+        import _connection
+        import _skill_view_hook
+        import _tool_handler
 
     manager = _connection.SkillMcpManager()
 

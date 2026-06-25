@@ -7,21 +7,23 @@ from pathlib import Path
 import pytest
 
 _CI_PLUGIN_PATH = "/opt/hermes/plugins/hermes_skill_mcp"
-_DEV_PLUGIN_PATH = str(Path(__file__).parent.parent / "src" / "hermes_skill_mcp")
+_DEV_PLUGIN_PATH = str(Path(__file__).parent.parent / "hermes_skill_mcp")
 PLUGIN_PATH = _CI_PLUGIN_PATH if Path(_CI_PLUGIN_PATH).exists() else _DEV_PLUGIN_PATH
 
 
 def import_plugin_module(module_name: str):
-    """Import a module from the skill-mcp plugin directory."""
-    plugin_path = Path(PLUGIN_PATH)
-    file_name = module_name.split(".")[-1]
-    spec = importlib.util.spec_from_file_location(
-        module_name,
-        plugin_path / "{}.py".format(file_name),
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    """Import a module from the skill-mcp plugin package.
+
+    Uses normal importlib.import_module so relative imports inside
+    the package resolve correctly.
+    """
+    import sys
+    pkg_root = str(Path(PLUGIN_PATH).parent)
+    if pkg_root not in sys.path:
+        sys.path.insert(0, pkg_root)
+    if module_name == "__init__":
+        return importlib.import_module("hermes_skill_mcp")
+    return importlib.import_module(f"hermes_skill_mcp.{module_name}")
 
 
 @pytest.fixture(scope="session")

@@ -266,10 +266,10 @@ class TestSkillViewHook:
         )
 
         proj_root = Path(__file__).resolve().parents[1]
-        src = proj_root / "plugins/hermes_skill_mcp/_skill_view_hook.py"
+        src = proj_root / "hermes_skill_mcp/_skill_view_hook.py"
         source_text = src.read_text(encoding="utf-8")  # noqa: WPS226
 
         assert hook_output is None
-        assert "from hermes_skill_mcp._connection import" not in source_text
+        assert "from ._connection import" not in source_text
         assert "import _connection" not in source_text
         assert "SkillMcpManager" not in source_text
