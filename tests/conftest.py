@@ -18,9 +18,12 @@ def import_plugin_module(module_name: str):
     the package resolve correctly.
     """
     import sys
-    pkg_root = str(Path(PLUGIN_PATH).parent)
-    if pkg_root not in sys.path:
-        sys.path.insert(0, pkg_root)
+    # PLUGIN_PATH points to the hermes_skill_mcp/ directory itself.
+    # Adding it to sys.path lets 'import hermes_skill_mcp' find the
+    # inner package in both dev (hermes_skill_mcp/) and CI
+    # (/opt/hermes/plugins/hermes_skill_mcp/hermes_skill_mcp/).
+    if PLUGIN_PATH not in sys.path:
+        sys.path.insert(0, PLUGIN_PATH)
     if module_name == "__init__":
         return importlib.import_module("hermes_skill_mcp")
     return importlib.import_module(f"hermes_skill_mcp.{module_name}")
